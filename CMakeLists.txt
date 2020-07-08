@@ -4,7 +4,7 @@
 
 cmake_minimum_required (VERSION 2.8)
 
-project (Mimick C)
+project (Mimick C CXX)
 
 if(POLICY CMP0042)
   # Allow @rpath in target's install name
