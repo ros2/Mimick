@@ -84,7 +84,7 @@ inline va_list & mmk_assign(va_list & dst, va_list src) {
   mmk_struct_initialize((mmk_literal<type, __COUNTER__>::storage), __VA_ARGS__)
 
 #  define mmk_literal(type, value) \
-  (mmk_assign(mmk_literal<type, __COUNTER__>::storage, (type) value))
+  (mmk_assign(mmk_literal<type, __COUNTER__>::storage, value))
 
 #  define mmk_default_value(type) mmk_default<type>::value
 

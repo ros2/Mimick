@@ -128,11 +128,15 @@ void mmk_stub_destroy(struct mmk_stub *stub);
  * @{
  */
 
+
 /**
  * Convenience wrapper to get an addressable temporary object from a lvalue.
  */
-# define mmk_val(Type, ...) &(mmk_literal(Type, {(__VA_ARGS__)}))
-
+# ifdef __cplusplus
+#  define mmk_val(Type, Value) &(mmk_literal(Type, Value))
+# else
+#  define mmk_val(Type, Value) &(mmk_literal(Type, {Value}))
+# endif
 /**
  * Defines a mock blueprint and typedef the Id to a function pointer type
  * matching the mock prototype.
