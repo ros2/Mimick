@@ -47,6 +47,13 @@ struct mmk_default {
   static constexpr T value{};
 };
 
+template<>
+struct mmk_default<va_list> {
+  static va_list value;
+};
+
+va_list mmk_default<va_list>::value{};
+
 template <typename T>
 inline T & mmk_assign(T & dst, T src) {
   return dst = std::move(src);
