@@ -128,7 +128,6 @@ void mmk_stub_destroy(struct mmk_stub *stub);
  * @{
  */
 
-
 /**
  * Convenience wrapper to get an addressable temporary object from a lvalue.
  */
