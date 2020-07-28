@@ -35,7 +35,7 @@ void test_error_case(void)
     mmk_assert((mmk_fn) mock != MMK_MOCK_INVALID);
 
     mmk_when(mock(mmk_any(size_t)),
-            .then_return = &(void *) { NULL },
+            .then_return = mmk_val(void *, NULL),
             .then_errno = ENOMEM);
 
     char *dup = my_strdup("foo");
