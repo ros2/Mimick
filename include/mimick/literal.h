@@ -40,15 +40,20 @@ struct mmk_literal {
 };
 
 template<typename T, int ID>
-T mmk_literal<T, ID>::storage{0};
+T mmk_literal<T, ID>::storage{};
+
+template<typename T>
+struct mmk_default {
+  static constexpr T value{};
+};
 
 template <typename T>
-T & mmk_assign(T & dst, T src) {
+inline T & mmk_assign(T & dst, T src) {
   return dst = std::move(src);
 }
 
 template <typename T, size_t N>
-T (& mmk_assign(T (&dst)[N], T * src))[N] {
+inline T (& mmk_assign(T (&dst)[N], T * src))[N] {
   if (src) {
     mmk_memcpy(dst, src, sizeof(T) * N);
   } else {
@@ -57,7 +62,7 @@ T (& mmk_assign(T (&dst)[N], T * src))[N] {
   return dst;
 }
 
-va_list & mmk_assign(va_list & dst, va_list src) {
+inline va_list & mmk_assign(va_list & dst, va_list src) {
   // no-op
   return dst;
 }
@@ -74,7 +79,7 @@ va_list & mmk_assign(va_list & dst, va_list src) {
 #  define mmk_literal(type, value) \
   (mmk_assign(mmk_literal<type, __COUNTER__>::storage, (type) value))
 
-#  define mmk_default_value(type) type{0}
+#  define mmk_default_value(type) mmk_default<type>::value
 
 # else /* !defined __cplusplus */
 
