@@ -47,6 +47,14 @@ struct mmk_default {
   static constexpr T value{};
 };
 
+template <typename T, size_t N>
+struct mmk_default<T[N]> {
+  static T value[N];
+};
+
+template <typename T, size_t N>
+T mmk_default<T[N]>::value[] = {0};
+
 template<>
 struct mmk_default<va_list> {
   static va_list value;
