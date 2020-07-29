@@ -1,4 +1,4 @@
-#include <mimick.h>
+#include <mimick/mimick.h>
 #include <mimick/assert.h>
 #include <errno.h>
 #include <string.h>

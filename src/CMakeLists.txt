@@ -43,7 +43,7 @@ set (INTERFACE_FILES
     include/mimick/va.h
     include/mimick/verify.h
     include/mimick/when.h
-    include/mimick.h
+    include/mimick/mimick.h
 )
 
 configure_file(

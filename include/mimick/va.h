@@ -25,7 +25,7 @@
 # define MMK_VA_H_
 
 # include "string.h"
-# include "../mimick.h"
+# include "mimick.h"
 
 /* mmk_va_args is actually just a preprocessed token without any real
    definition -- we just reserve it anyway in mimick.h. */

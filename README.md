@@ -31,7 +31,7 @@ Here is a simple usage of Mimick to mock the `malloc` function:
 ```c
 #include <stdlib.h>
 #include <assert.h>
-#include <mimick.h>
+#include <mimick/mimick.h>
 
 /* Define the blueprint of a mock identified by `malloc_proto`
    that returns a `void *` and takes a `size_t` parameter. */

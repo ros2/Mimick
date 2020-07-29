@@ -1,4 +1,4 @@
-#include <mimick.h>
+#include <mimick/mimick.h>
 #include <mimick/assert.h>
 #include <stdlib.h>
 #include <limits.h>

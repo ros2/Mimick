@@ -23,7 +23,7 @@
  */
 #include <stdlib.h>
 
-#include "mimick.h"
+#include "mimick/mimick.h"
 #include "mimick/assert.h"
 
 #include "mock.h"
