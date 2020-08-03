@@ -47,6 +47,9 @@ struct mmk_default {
   static constexpr T value{};
 };
 
+template<typename T>
+constexpr T mmk_default<T>::value;
+
 template <typename T, size_t N>
 struct mmk_default<T[N]> {
   static T value[N];
