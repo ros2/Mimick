@@ -83,7 +83,7 @@ plt_fn *create_trampoline(void *ctx, plt_fn *routine)
 # if defined __clang__  // Check for Clang first, it may set __GNUC__ too.
     __clear_cache(map, map + PAGE_SIZE);
 # elif defined __GNUC__
-    __builtin___clear_cache((char *)map, (char *)(map + PAGE_SIZE));
+    __builtin___clear_cache((char *)map, (char *)(map + 2 + trampoline_sz));
 # endif
     return (plt_fn *) (map + 2);
 }
