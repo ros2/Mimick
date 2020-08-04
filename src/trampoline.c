@@ -81,7 +81,7 @@ plt_fn *create_trampoline(void *ctx, plt_fn *routine)
     memcpy(map + 2, mmk_trampoline, trampoline_sz);
     mmk_assert(!mmk_mprotect(map, PAGE_SIZE, PROT_READ | PROT_EXEC));
 # if defined __clang__  // Check for Clang first, it may set __GNUC__ too.
-    __clear_cache(map, map + PAGE_SIZE);
+    __clear_cache(map, map + 2 + trampoline_sz);
 # elif defined __GNUC__
     __builtin___clear_cache((char *)map, (char *)(map + 2 + trampoline_sz));
 # endif
