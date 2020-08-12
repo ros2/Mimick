@@ -46,7 +46,10 @@ struct mmk_params {
     struct mmk_params *next;
 };
 
-struct mmk_mock_options {
+// Force bit-field alignment to circumvent a bug in GCC
+// versions 6, 7, and 8, and a fixup notice on GCC 9.
+// See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88469.
+struct __attribute__((aligned(32))) mmk_mock_options {
     unsigned sentinel_  : 1;
     unsigned noabort    : 1;
 };
