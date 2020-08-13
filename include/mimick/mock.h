@@ -26,6 +26,7 @@
 
 # include <errno.h>
 # include <stdarg.h>
+# include <stdint.h>
 
 # include "matcher.h"
 # include "alloc.h"
@@ -46,21 +47,25 @@ struct mmk_params {
     struct mmk_params *next;
 };
 
-#if defined(__GNUC__) && !defined(__clang__)
+# if defined(__GNUC__) && !defined(__clang__)
 // Force bit-field alignment to circumvent a bug in GCC
-// versions 6, 7, and 8, and a fixup notice on GCC 9.
+// versions 6, 7, and 8, and a ABI fix notice in GCC 9.
 // See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88469.
-// For 32 bit machines in which bit-field alignment matters,
-// this will ensure correct alignment. For 64 bit machines
-// in which bit-field alignment matters, we can reasonably
-// expect the compiler to tighten up alignment.
-struct __attribute__((aligned(4))) mmk_mock_options {
-#else
+#  if UINTPTR_MAX == UINT64_MAX
+#   define BITFIELD_ALIGNMENT __attribute__((aligned(8)))
+#  elif UINTPTR_MAX == UINT32_MAX
+#   define BITFIELD_ALIGNMENT __attribute__((aligned(4)))
+#  endif
+# else
+#  define BITFIELD_ALIGNMENT
+# endif
+
 struct mmk_mock_options {
-#endif
-    unsigned sentinel_  : 1;
-    unsigned noabort    : 1;
+  unsigned BITFIELD_ALIGNMENT sentinel_  : 1;
+  unsigned BITFIELD_ALIGNMENT noabort    : 1;
 };
+
+# undef BITFIELD_ALIGNMENT
 
 struct mmk_params *mmk_mock_get_params(void);
 void *mmk_mock_params_begin(struct mmk_mock_ctx *mock);
