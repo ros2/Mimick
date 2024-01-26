@@ -25,7 +25,10 @@
 # define THREADLOCAL_H_
 
 # if __STDC_VERSION__ >= 201112L && !defined __STDC_NO_THREADS__
-#  define MMK_THREAD_LOCAL(Type) _Thread_Local Type
+#  if __STDC_VERSION__ < 202311L
+#   include <threads.h>
+#  endif
+#  define MMK_THREAD_LOCAL(Type) thread_local Type
 # elif defined _MSC_VER
 #  define MMK_THREAD_LOCAL(Type) __declspec(thread) Type
 # elif defined __GNUC__ && defined _WIN32
