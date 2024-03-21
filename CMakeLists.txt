@@ -201,7 +201,7 @@ function (add_mimick_test _NAME)
 
   if (NOT MSVC)
     foreach (ARG ${ARGN})
-      set_source_files_properties (${ARG} PROPERTIES COMPILE_FLAGS -O0)
+      set_source_files_properties (${ARG} PROPERTIES COMPILE_FLAGS "-O0 -Wp,-U_FORTIFY_SOURCE")
     endforeach ()
   endif ()
 
