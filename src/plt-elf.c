@@ -317,15 +317,6 @@ void plt_reset_offsets(plt_offset *offset, size_t nb_off) {
   }
 }
 
-static uint32_t elf_gnu_hash(const char *name) {
-  uint32_t h = 5381;
-
-  for (unsigned char c = *name; c != '\0'; c = *++name)
-    h = (h << 5) + h + *name;
-
-  return h;
-}
-
 static unsigned long elf_hash(const char *s) {
   unsigned long h = 0, high;
   while (*s) {
@@ -335,53 +326,6 @@ static unsigned long elf_hash(const char *s) {
     h &= ~high;
   }
   return h;
-}
-
-static ElfW(Sym) * elf_gnu_hash_find(const ElfW(Word) * gnu_hash,
-                                     ElfW(Sym) * symtab, const char *strtab,
-                                     const char *name) {
-  const uint32_t namehash = elf_gnu_hash(name);
-
-  const uint32_t nbuckets = gnu_hash[0];
-  const uint32_t symoffset = gnu_hash[1];
-  const uint32_t bloom_size = gnu_hash[2];
-  const uint32_t bloom_shift = gnu_hash[3];
-  const ElfWord *bloom = (void *)&gnu_hash[4];
-  const uint32_t *buckets = (void *)&bloom[bloom_size];
-  const uint32_t *chain = &buckets[nbuckets];
-
-  ElfWord word = bloom[(namehash / MMK_BITS) % bloom_size];
-  ElfWord mask = 0 | (ElfWord)1 << (namehash % MMK_BITS) |
-                 (ElfWord)1 << ((namehash >> bloom_shift) % MMK_BITS);
-
-  /* If at least one bit is not set, a symbol is surely missing. */
-  if ((word & mask) != mask)
-    return NULL;
-
-  uint32_t symix = buckets[namehash % nbuckets];
-  if (symix < symoffset)
-    return NULL;
-
-  size_t name_len = mmk_strlen(name);
-
-  /* Loop through the chain. */
-  while (1) {
-    const char *symname = strtab + symtab[symix].st_name;
-    const uint32_t hash = chain[symix - symoffset];
-    size_t symname_len = strlen(symname);
-    size_t cmp_len = (name_len < symname_len) ? name_len : symname_len;
-
-    if ((namehash | 1) == (hash | 1) && mmk_memcmp(name, symname, cmp_len) == 0)
-      return &symtab[symix];
-
-    /* Chain ends with an element with the lowest bit set to 1. */
-    if (hash & 1)
-      break;
-
-    symix++;
-  }
-
-  return NULL;
 }
 
 static ElfW(Sym) * elf_hash_find(ElfW(Word) * hash, ElfW(Sym) * symtab,
