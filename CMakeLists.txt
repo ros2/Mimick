@@ -2,7 +2,7 @@
 # Redistribution and use of this file is allowed according to the terms of the MIT license.
 # For details see the LICENSE file distributed with Mimick.
 
-cmake_minimum_required (VERSION 3.5)
+cmake_minimum_required (VERSION 3.15)
 
 project (Mimick C CXX)
 # Default to C++11
