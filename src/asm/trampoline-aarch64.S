@@ -23,7 +23,7 @@
  */
 #include "mangling.h"
 
-.align 4
+.align 8
 .globl MANGLE(mmk_trampoline)
 MANGLE(mmk_trampoline):
     adr     x16, .
@@ -72,7 +72,7 @@ ret_ctx:
     ldp     x16, x30, [sp], #16
     ret
 
-.align 4
+.align 8
 .globl MANGLE(mmk_trampoline_end)
 MANGLE(mmk_trampoline_end):
     nop
