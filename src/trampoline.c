@@ -34,93 +34,86 @@ extern void mmk_trampoline();
 extern void mmk_trampoline_end();
 
 #if defined HAVE_MMAP
-# include <unistd.h>
-# include <sys/mman.h>
+#include <sys/mman.h>
+#include <unistd.h>
 
-# ifndef HAVE_MMAP_MAP_ANONYMOUS
-#  include <fcntl.h>
-# endif
+#ifndef HAVE_MMAP_MAP_ANONYMOUS
+#include <fcntl.h>
+#endif
 
-# if defined __clang__
+#if defined __APPLE__
+#include <libkern/OSCacheControl.h> // LLVM __clear_cache seems not working on Mac ARM64
+#elif defined __clang__
 void __clear_cache(void *, void *);
-# endif
+#endif
 
-plt_fn *create_trampoline(void *ctx, plt_fn *routine)
-{
-    uintptr_t trampoline_sz = (uintptr_t) mmk_trampoline_end
-                            - (uintptr_t) mmk_trampoline;
+plt_fn *create_trampoline(void *ctx, plt_fn *routine) {
+  uintptr_t trampoline_sz =
+      (uintptr_t)mmk_trampoline_end - (uintptr_t)mmk_trampoline;
 
-    mmk_assert(trampoline_sz < PAGE_SIZE);
+  mmk_assert(trampoline_sz < PAGE_SIZE);
 
-# if defined HAVE_MMAP_MAP_ANONYMOUS
-    void **map = mmap(NULL, PAGE_SIZE,
-#   if !defined __APPLE__
-            PROT_READ | PROT_WRITE | PROT_EXEC,
-#   else
-            PROT_READ | PROT_WRITE,
-#   endif
-            MAP_PRIVATE | MAP_ANONYMOUS,
-            -1, 0);
-# elif defined HAVE_MMAP_MAP_ANON
-    void **map = mmap(NULL, PAGE_SIZE,
-            PROT_READ | PROT_WRITE | PROT_EXEC,
-            MAP_PRIVATE | MAP_ANON,
-            -1, 0);
-# else
-    int fd = open("/dev/zero", O_RDWR);
-    mmk_assert(fd != -1);
+#if defined HAVE_MMAP_MAP_ANONYMOUS
+#if !defined MAP_JIT
+#define MAP_JIT 0
+#endif
+  void **map = mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE,
+                    MAP_PRIVATE | MAP_ANONYMOUS | MAP_JIT, -1, 0);
+#elif defined HAVE_MMAP_MAP_ANON
+  void **map = mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE,
+                    MAP_PRIVATE | MAP_ANON, -1, 0);
+#else
+  int fd = open("/dev/zero", O_RDWR);
+  mmk_assert(fd != -1);
 
-    void **map = mmap(NULL, PAGE_SIZE,
-            PROT_READ | PROT_WRITE | PROT_EXEC,
-            MAP_PRIVATE,
-            fd, 0);
+  void **map = mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE | PROT_EXEC,
+                    MAP_PRIVATE, fd, 0);
 
-    mmk_assert(close(fd) != -1);
-# endif
+  mmk_assert(close(fd) != -1);
+#endif
 
-    mmk_assert(map != MAP_FAILED);
+  mmk_assert(map != MAP_FAILED);
 
-    *map = ctx;
-    *(map + 1) = (void *) routine;
-    memcpy(map + 2, mmk_trampoline, trampoline_sz);
-    mmk_assert(!mmk_mprotect(map, PAGE_SIZE, PROT_READ | PROT_EXEC));
-# if defined __clang__  // Check for Clang first, it may set __GNUC__ too.
-    __clear_cache(map, map + 2 + trampoline_sz);
-# elif defined __GNUC__
-    __builtin___clear_cache((char *)map, (char *)(map + 2 + trampoline_sz));
-# endif
-    return (plt_fn *) (map + 2);
+  *map = ctx;
+  *(map + 1) = (void *)routine;
+  memcpy(map + 2, mmk_trampoline, trampoline_sz);
+  mmk_assert(!mmk_mprotect(map, PAGE_SIZE, PROT_READ | PROT_EXEC));
+#if defined __APPLE__
+  sys_icache_invalidate(map, PAGE_SIZE);
+#elif defined __clang__ // Check for Clang first, it may set __GNUC__ too.
+  __clear_cache(map, map + PAGE_SIZE);
+#elif defined __GNUC__
+  __builtin___clear_cache((char *)map, (char *)(map + 2 + trampoline_sz));
+#endif
+  return (plt_fn *)(map + 2);
 }
 
-void destroy_trampoline(plt_fn *trampoline)
-{
-    munmap((void **) trampoline - 2, PAGE_SIZE);
+void destroy_trampoline(plt_fn *trampoline) {
+  munmap((void **)trampoline - 2, PAGE_SIZE);
 }
 #elif defined _WIN32
-# include <windows.h>
+#include <windows.h>
 
-plt_fn *create_trampoline(void *ctx, plt_fn *routine)
-{
-    uintptr_t trampoline_sz = (uintptr_t) mmk_trampoline_end
-                            - (uintptr_t) mmk_trampoline;
+plt_fn *create_trampoline(void *ctx, plt_fn *routine) {
+  uintptr_t trampoline_sz =
+      (uintptr_t)mmk_trampoline_end - (uintptr_t)mmk_trampoline;
 
-    mmk_assert(trampoline_sz < PAGE_SIZE);
-    void **map = VirtualAlloc(NULL, PAGE_SIZE,
-            MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+  mmk_assert(trampoline_sz < PAGE_SIZE);
+  void **map =
+      VirtualAlloc(NULL, PAGE_SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
-    *map = ctx;
-    *(map + 1) = (void *) routine;
-    memcpy(map + 2, mmk_trampoline, trampoline_sz);
+  *map = ctx;
+  *(map + 1) = (void *)routine;
+  memcpy(map + 2, mmk_trampoline, trampoline_sz);
 
-    DWORD old;
-    VirtualProtect(map, PAGE_SIZE, PAGE_EXECUTE_READ, &old);
-    return (plt_fn *) (map + 2);
+  DWORD old;
+  VirtualProtect(map, PAGE_SIZE, PAGE_EXECUTE_READ, &old);
+  return (plt_fn *)(map + 2);
 }
 
-void destroy_trampoline(plt_fn *trampoline)
-{
-    VirtualFree((void **) trampoline - 2, 0, MEM_RELEASE);
+void destroy_trampoline(plt_fn *trampoline) {
+  VirtualFree((void **)trampoline - 2, 0, MEM_RELEASE);
 }
 #else
-# error Unsupported platform
+#error Unsupported platform
 #endif
