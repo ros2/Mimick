@@ -89,6 +89,7 @@ Supported Compilers: GCC 4.6+, Clang 3.5+, MSVC 14+
 | x86\_64 | ✓ | ✓ | ✓ | ✓ |
 | ARM     | ✓ | ? | ✓ | ✕ |
 | ARM64   | ✓ | ? | ? | ∄ |
+| LoongArch64 | ✓ | ∄ | ∄ | ∄ |
 | PPC     | ✕ | ✕ | ✕ | ∄ |
 
 ## F.A.Q.
